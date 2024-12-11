@@ -1,0 +1,446 @@
+\documentclass[11pt,a4paper,oneside]{article}
+\usepackage{main}
+
+\begin{document}
+
+\def\articletitle{Cardano Layer 2 Interoperability: Midgard and Hydrozoa}
+\def\anastasiaLabs{\href{https://anastasialabs.com/}{Anastasia Labs}}
+
+\def\hydrozoaProposal{\href{https://projectcatalyst.io/funds/12/f12-cardano-use-cases-mvp/cardano-layer-2-hydrozoa-protocol-for-lightweight-and-flexible-hydra-heads-for-cardano}{Hydrozoa}}
+\def\midgardWebsite{\href{https://midgardprotocol.com/}{Midgard}}
+
+\title{\fontsize{3.0em}{3.2em}\textbf{\articletitle}}
+
+\date{\large\textbf{\uppercase{Draft}~\gitAuthorDate}}
+
+\begingroup
+\def\arraystretch{5}%
+\setlength\tabcolsep{10em}%
+\author{\begin{tabular}{>{\hspace{-0.6em}}l<{\hspace{3em}}l<{\hspace{3em}}l}
+    {\Large George Flerovsky}&
+    {\normalsize \hydrozoaProposal~Product Owner}&
+    {\normalsize Midgard Project Lead}\\[0.8em]
+    {\Large Philip DiSarro}&
+    {\normalsize \midgardWebsite~Product Owner}&
+    {\normalsize CEO \anastasiaLabs}
+  \end{tabular}
+}
+\endgroup
+
+\hypersetup{
+  pdftitle={\articletitle},
+  pdfauthor={George Flerovsky, Philip DiSarro},
+  pdfsubject={Cardano blockchain Layer 2 scaling interoperability},
+  pdfkeywords={Cardano blockchain L2 scaling interoperability Midgard Hydrozoa state channel optimistic rollup},
+}
+
+\thispagestyle{firstpagestyle}
+\maketitle
+
+% ======================================================================
+\begin{abstract}
+  Midgard and Hydrozoa are Layer 2 (L2) solutions at the forefront of Cardano's next scalability era.
+  Interoperability between them (and other L2s) mitigates their relative weaknesses while reaping the full benefits of their strengths.
+  Midgard provides massive throughput and a non-multisig consensus protocol ideal for many smart-contract-based dApps to co-exist on a single ledger with vast userbases, but it suffers from delayed settlement for withdrawals to L1.
+  A Hydrozoa head provides instant finality and low cost for its peers' transactions and withdrawals, but only its peers benefit from the protocol's full security guarantees.
+
+  We propose an eUTXO-enhanced hashed timelock contract (HTLC) as the universal mechanism of L2-L2 transfers of funds and information.
+  An HTLC transfer from Midgard to a Hydrozoa head can eliminate the Midgard settlement delay for any peer of the Hydrozoa head.
+  HTLC transfers within a network of Hydrozoa heads liberate the flow of funds and information within the network, with Midgard, and with other L2s that support HTLCs (incl. Bitcoin Lightning).
+
+  Standardizing L2-L2 transfers, L2 state queries, and wallet integration can mitigate the UX fragmentation problem as Cardano pursues complementary L2 solutions.
+\end{abstract}
+
+\begin{multicols}{2}
+
+% ======================================================================
+\section{Introduction}%
+\label{h:introduction}
+
+Scalability, decentralization, security, and latency are competing objectives that all blockchains must balance.
+Layer 1 (L1) blockchains provide their own security and decentralization, so they mainly focus on these objectives.
+Layer 2 (L2) solutions depend on L1 for at least some of their security and decentralization, so they can focus more on scalability and latency.
+
+A tapestry of L1s and L2s specializing in different objectives can collectively achieve a better result than any of them.
+For example, Cardano maintains world-class decentralization and security on its L1 while relying on L2 solutions to provide scalability and lower latency.
+This buys time for the L1 developers to study the implemented solutions and gradually improve L1 scalability and latency in a principled manner.
+
+Unfortunately, the user experience can get fragmented by the mismatch of design principles, mechanisms, standards, and interfaces that L1s and L2s adopt to achieve their specializations.
+Users should only be expected to choose the best L1/L2 for each task when the L1s and L2s are interoperable.
+Thus, interoperability is key for L1s and L2s to achieve their collective potential.
+
+In this paper, we describe Midgard, Hydrozoa, and Bitcoin Lightning, and then illustrate how a hashed timelock contract (HTLC) can be used to interoperate between them.
+We chose these L2s to represent monolithic rollups, state channels, and external L2s.
+We provide examples of interoperability between these representatives, which future work can generalize to a comprehensive aggregate layer for Cardano.
+
+% ======================================================================
+\section{Midgard}%
+\label{h:midgard}
+
+Midgard \citep{AnastasiaLabsMidgardCardanoLayer2024} is Cardano’s first optimistic rollup.
+It achieves massive throughput gains by keeping only fixed-sized block headers onchain while storing and processing large blocks of transactions offchain.
+
+It uses fraud proofs and a data availability layer to achieve security properties similar to Cardano.
+These mechanisms allow anyone in the world to detect ledger rule violations, remove the fraudulent block headers, punish the culpable operators, and receive a reward.
+When a block header is committed onchain, it waits to mature in a queue before being merged to the confirmed state.
+The maturity period provides ample opportunity for the block header to be removed if fraudulent.%
+\footnote{The block maturity period duration is expected to be between three and seven days---to be decided based on benchmarks.}
+
+Relative to state channel protocols, Midgard's biggest advantage is that it does not rely on multi-signatures for consensus on the sequence, content, and ledger-rule compliance of blocks.
+Instead, its operators individually interact with an onchain smart-contract-based consensus protocol to confirm blocks.
+Furthermore, it has an “escape hatch” onchain mechanism to allow valid L2 transactions and withdrawals to circumvent operators that censor them.
+
+This makes Midgard a natural environment for applications with unlimited userbases and with smart contracts managing substantial funds and internal state (e.g., AMM DEXs).
+By contrast, state channels are awkward hosts for such applications because their small multisig groups may not be appropriate custodians for app funds, and it's hard to fit the whole userbase into the multisig group.
+They can mitigate this by increasing the custodian group size within a single channel,%
+  \footnote{Gummiworm \citep{SundaeLabsComprehensiveSpecificationDevelopment2024} is a protocol built on top of a low-divergence fork of the Hydra Head protocol. It introduces a new group of validators who are responsible for any effects that L2 events may have on L1. Meanwhile, the Hydra Head operators specialize in handling L2 events and forwarding rolled-up states to the custodial validators for ratification. By separating these roles, Gummiworm achieves a larger custodial multi-signature group, as the high-frequency computational effort is delegated to the Head operators.}
+virtualizing ledger state across two channels,%
+  \footnote{Inter-head Hydra \citep{JourenkoEtAlInterheadHydraTwo2023} is a construction that allows two Hydra Heads to be combined into a single virtual Head that can execute Constraint Emitting Machines~(CEM) across the two heads. This process can be iterated to merge more Hydra Heads into the virtual Head.}
+or adopting a delegated architecture.%
+  \footnote{Hydra auction \citep{MLabsLtdIkigaiTechHydraAuctionBlockchain2024} is a hybrid L1-L2 dApp protocol that stores user funds for sellers and bidders on L1 while sending a standing bid utxo to a Hydra Head managed by independent third parties.
+    The Hydra Head peers are trusted to ensure that the standing bid can only be replaced by a higher bid during the auction, bids are not counterfeited or censored, and the standing bid is sent back to L1 at the end of the bidding period.
+    When the standing bid returns to L1, its information is combined with the auction lot escrow to resolve the auction.}
+
+These pursuits are valuable but make various complexity, performance, and security tradeoffs.
+Meanwhile, a single monolithic Midgard instance can accommodate unlimited users and funds with strong assurance of compliance with ledger rules, even if it only has one operator.%
+\footnote{Midgard needs multiple operators mainly to keep throughput consistent.
+If the current operator goes offline, the next operator can nearly seamlessly take over.
+Midgard's escape-hatch mechanism is the main defense against censorship.}
+
+Midgard's main disadvantage relative to the state channel protocols is its block maturity period, which affects withdrawals more severely than deposits.
+Deposits into Midgard can be recognized on L2 as soon as the L1 deposit transactions are confirmed and a block header in the state queue recognizes them.
+Withdrawals from Midgard can only be settled on L1 after a block header in the state queue recognizes them and gets merged into the confirmed state, which can only happen after its days-long maturity period elapses.
+Midgard's block maturity period cannot be eliminated because its optimistic rollup consensus protocol needs to allocate time for fraud proofs to be submitted and verified on L1 for any fraudulent blocks.
+By contrast, Hydrozoa can settle deposits and withdrawals with immediate finality upon snapshot multi-signature.
+
+This forms Midgard's operational incentive to seek interoperability with the state channels and unify the user experience across L2s.
+
+% ======================================================================
+\section{Hydrozoa}%
+\label{h:hydrozoa}
+
+Hydrozoa \citep{FlerovskyHydrozoaProtocolLightweight2024} is a dynamic, near-isomorphic multi-party state channel protocol.
+A Hydrozoa head's peers enjoy high throughput, instant finality, and low costs while transacting with each other.
+
+Hydrozoa evolved out of Cardano's Hydra Head protocol \citep{NagelEtAlHydraHeadV1Specification2024}, dramatically simplifying the L1 smart contract architecture and increasing flexibility.
+A Hydrozoa head remains open while its peers add or remove peers (by unanimous consensus) and deposit or withdraw funds.
+
+Onchain, a Hydrozoa head keeps all funds and state at a multisig native script address controlled collectively by its peers.
+Peers deposit funds or information into the head by sending utxos to this address,%
+\footnote{Deposits are assured against being stranded by consensus failure.
+A deposit is either confirmed to be recognized on L2 via an L1 transaction multi-signed by the peers, or a timeout mechanism allows the user to recover it.}
+and withdrawals are settled by multi-signed settlement transactions that send utxos out of this address.
+
+If peers cannot multi-sign any more transactions, Hydrozoa's state timeout mechanism transfers control over the head from the native script to a Plutus script.%
+\footnote{With CIP-112 \citep{DiSarroCIP112ObserveScript2024}, Hydrozoa's timeout mechanisms will be implemented with native scripts that directly invoke Plutus scripts.
+Before then, timeout is implemented with post-dated transactions.}
+The Plutus script resolves the peers' dispute by allowing each peer to submit a multi-signed ledger snapshot version, from which it selects the latest one.
+With the latest snapshot established, peers can unilaterally execute their own withdrawals by interacting with the snapshot's utxo Merkle tree.
+
+Offchain, Hydrozoa broadcasts requests among peers and generates a sequence of multi-signed snapshots.
+Each snapshot is versioned and consists of a sequence of settlement transactions and a Merkle root hash of its active utxo set.
+The settlement transactions recognize new deposits in the L2 state and settle withdrawals from L2 to L1.
+The Merkle root hash defines the snapshot's not-yet-withdrawn L2 utxos, which can later be unilaterally withdrawn if the Plutus script selects this as the last snapshot.
+
+As long as one of the peers is honest, the offchain protocol guarantees that a snapshot's L2 ledger state is derived by applying its events (deposits, transactions, and withdrawals) to the previous snapshot's ledger state.
+It also guarantees that future snapshots never contradict a multi-signed snapshot's settlement transactions.
+This makes settlement transactions deterministic and provides instant finality for a snapshot's events as soon as it is multi-signed.
+
+Overall, a Hydrozoa Head excels at facilitating fast and frequent interactions for its peers with each other and Cardano.
+Its main incentive to interoperate with other L2s is to expand its peers' reach beyond their small group and allow them to interact with large smart-contract-based applications.
+
+% ======================================================================
+\section{Hashed timelock contract}%
+\label{h:hashed-timelock-contract}
+
+The hashed timelock contract (HTLC) is a building block for transfers and atomic swaps between two ledgers.
+It is useful when direct transfers or atomic swaps between the two ledgers are unavailable.
+
+The HTLC contract enforces the following conditions when any utxo is spent from its address:
+\begin{description}
+  \item[Redeem] Until the expiry time, the funds can be sent to the target address
+    if the secret in the redeemer corresponds to the secret hash.
+  \item[Refund] After the expiry time, the funds can be sent to the refund address.
+\end{description}
+Accordingly, the datum of every utxo at the HTLC contract address must specify the expiry time, the secret hash, the target address, and the refund address.
+
+% ======================================================================
+\subsection{HTLC transfer}%
+\label{h:htlc-transfer}
+
+Bitcoin Lightning \citep{PoonDryjaBitcoinLightningNetwork2016} pioneered the use of two HTLCs to transfer funds between two people on different state channels via an intermediary common to both channels \citep{LightningLabsHashedTimelockContract2023}.
+
+Suppose that Alice wants to send her funds on ledger~A to Bob on ledger~B.
+If Charlie holds sufficient funds on ledger~A and is willing to receive funds on ledger~B, an HTLC transfer from Alice to Bob via Charlie would work as follows:
+\begin{enumerate}
+  \item Bob generates a secret, hashes it, and sends the hash to Alice.
+  \item Alice locks funds in a utxo at the HTLC address on ledger~A with the following datum:
+    \begin{itemize}
+      \item Bob's secret hash
+      \item Alice's expiry time
+      \item Charlie's target address
+      \item Alice's refund address
+    \end{itemize}
+  \item If Charlie sees Alice's HTLC utxo confirmed on ledger~A, he locks equivalent funds in a utxo at the HTLC address on ledger~B with the following datum:
+    \begin{itemize}
+      \item Bob's secret hash
+      \item Charlie's expiry time (slightly earlier than Alice's to avoid race conditions)
+      \item Bob's target address
+      \item Charlie's refund address
+    \end{itemize}
+  \item If Bob sees Charlie's HTLC utxo confirmed on ledger~B, he redeems its funds by revealing his secret.
+  \item If Charlie sees Bob's redemption, he redeems the funds in Alice's HTLC utxo with Bob's revealed secret.
+  \item If Charlie's expiry time occurs before Bob's redemption, Charlie refunds his HTLC utxo.
+  \item If Alice's expiry time occurs before Charlie's redemption, Alice refunds her HTLC utxo.
+\end{enumerate}
+Charlie can charge a fee for intermediating the transfer by deducting it from the funds he locks in his HTLC utxo for Bob on ledger~B.
+
+Assuming that the parties are vigilant and the rules of ledger~A and ledger~B are fully enforced by their respective consensus protocols, the above transfer mechanism guarantees that either all HTLCs are redeemed \emph{or} all HTLCs are refunded.
+
+% ======================================================================
+\subsection{HTLC atomic swap}%
+\label{h:htlc-atomic-swap}
+
+An atomic swap between two ledgers can be implemented as an HTLC transfer where the sender and recipient are the same person.
+For instance, suppose Alice was both the sender and recipient in the above example, replacing Bob.
+If all HTLCs are redeemed, Charlie will hold Alice's funds on ledger~A and Alice will hold Charlie's funds on ledger~B.
+If all HTLCs are refunded, then Alice and Charlie keep their respective funds.
+
+Furthermore, an HTLC atomic swap can be used to exchange different asset classes between two ledgers.
+In this variant, Alice would lock BTC in an HTLC on Bitcoin ledger and Charlie would lock ADA in an HTLC on Cardano ledger.
+
+% ======================================================================
+\subsection{HTLC in the eUTXO model}%
+\label{h:htlc-in-the-eutxo-model}
+
+In the extended UTXO model (eUTXO), addresses can be public-key or script-based, and utxos can contain datums.
+In principle, this allows any party in an HTLC transfer to be replaced by a dApp or a smart wallet.
+It also allows contextual information to be provided for the transfer in the utxo datum.
+
+For example, Alice can use an HTLC transfer to directly interact with a dApp on ledger~B, without any pubkey-based intermediary holding custody of Alice's funds during the transfer.
+In this variant, Alice (or her trusted agent) would need to monitor ledger~B for Charlie's HTLC utxo and redeem its funds into the script-based target.
+
+Similarly, a dApp on ledger~A could initiate an HTLC transfer, with refunds returning to its refund address with appropriate datums.
+Of course, the dApp would need honest agents to fulfill its obligation to monitor ledger~A for redemption or expiry.
+
+More generally, many subtle nuances require consideration to securely set up an HTLC transfer with a script-based sender or recipient.
+However, such transfers may significantly improve the user experience of interacting with dApps across L2s.
+
+% ======================================================================
+\section{Bitcoin Lightning network}%
+\label{h:bitcoin-lightning-network}
+
+Bitcoin Lightning regularly executes payments for senders and recipients that do \emph{not} directly share a common intermediary in their state channels.
+It does this by chaining HTLC transfers on a route across the network connecting the sender and recipient channels.
+
+For example, a multi-hop HTLC transfer from Alice on channel 1 to Bob on channel 4 could involve four HTLCs (all using Bob's secret hash):
+\begin{itemize}
+  \item HTLC from Alice to Charlie on channel 1
+  \item HTLC from Charlie to Daisy on channel 2
+  \item HTLC from Daisy to Frank on channel 3
+  \item HTLC from Frank to Bob on channel 4
+\end{itemize}
+
+The above transfer will fail unless the transfer amount (plus transfer fees) is less than or equal to each of the following:
+\begin{itemize}
+  \item Alice's balance on channel 1
+  \item Charlie's balance on channel 2
+  \item Daisy's balance on channel 3
+  \item Frank's balance on channel 4
+\end{itemize}
+
+In Bitcoin Lightning, a channel's capacity is the total balance of its two peers.
+Each peer's balance is their outbound~capacity and the other peer's inbound~capacity in the channel.
+In other words, the most a peer can send to the other peer is their balance,  and the most they can receive is the other peer's balance.
+
+When figuring out a route to pay Bob, Alice would like to consider all the paths that connect her to Bob and have intermediaries with sufficient outgoing capacities.
+If none of these paths can handle her full transfer amount, she could split it into partial amounts to be sent across multiple parallel paths that connect her to Bob---assuming she has channels open with other people besides Charlie.
+
+Equivalently, if Bob is figuring out a route to get paid by Alice, he would like to consider all the paths that connect him to Alice and have intermediaries with sufficient incoming capacity.
+
+% ======================================================================
+\subsection{Routing uncertainty}%
+\label{h:lightning-routing-uncertainty}
+
+Unfortunately, most channels only publicize their total capacity and keep the individual balances private.
+Moreover, the individual balances change with every transfer handled by a channel, and the flow of funds is often unbalanced---for example, merchants receive more payments than they send to users.
+
+Furthermore, channels that become completely unbalanced (i.e., one peer holds all the funds) are closed, and new ones may be opened with additional deposits to rebalance the funds.
+Information about open and closed channels diffuses gradually through the peer-to-peer network.
+
+Overall, this means that Alice has an uncertain view of the network topology and only sees total channel capacities, not the individual balances she needs to see.
+She mitigates this by a trial-and-error loop of negotiating tentative paths with intermediaries and attempting to execute the agreed paths.
+Eventually, after many failed attempts, her full transfer amount reaches Bob.
+
+The expected success probability is inversely proportional to the transfer amount and the number of hops because it only takes one intermediary with insufficient outbound liquidity to fail the transfer.
+ \citet{WaughHolzEmpiricalStudyAvailability2020} observed no more than 72\% successful payments and 36\% unique nodes reachable from the study's node when using the smallest payment amount (US\$0.01):%
+\footnote{The experiment ran from 2019-11-03 to 2019-11-25 with one Lightning node and a channel open with each of the two most well-connected nodes in the network.
+  In breadth-first order, they probed whether a payment route would succeed to these initial peers, and then recursively to all of their transitive peers.
+
+  Each peer was probed by negotiating a route with an invalid invoice (to avoid actually paying), which was either rejected at the end of the route due to secret hash mismatch (``success'') or rejected for some other reason along the way (``failure'').
+  Two attempts to negotiate such a route were made per peer, and the payment was considered successful if either attempt succeeded.
+  The second table column shows the percentage of payments that succeeded for each payment amount.
+
+  If a peer failed the probe, then its recursive peers were not probed.
+  The third table column shows the percentage of unique-node peers that were reachable by probes for each payment amount.
+}
+
+\begin{figure-multicol}
+\captionof{table}{\\Payment success rate and unique nodes reached}
+\begin{tabular}{rrrr}\toprule
+  Amount (US\$) & \% payments & \% nodes \\ \midrule
+    0.01 & 71.92 & 35.24 \\
+    1.00 & 57.82 & 35.19 \\
+    5.00 & 44.06 & 25.66 \\
+   10.00 & 44.15 & 33.72 \\
+   50.00 & 30.93 &  9.22 \\
+  100.00 & 17.30 &  4.82 \\ \bottomrule
+\end{tabular}
+\end{figure-multicol}
+
+A node's position within the network affects its expected performance, costs, and fee revenue.
+\citet{LangeEtAlImpactAttachmentStrategies2021a} showed that nodes fare better by attaching near the center than at the periphery of the network.
+Consequently, the Lightning network tends to centralize around several highly connected hubs with high channel capacities.
+
+% ======================================================================
+\section{Hydrozoa network}%
+\label{h:hydrozoa-network}
+
+In principle, Hydrozoa heads can be networked in the same way to facilitate similar transfers.%
+\footnote{Networking Hydrozoa will require considerable work to establish the peer-to-peer gossip network about peers and capabilities, a routing protocol for messages between peers, channel discovery, etc.
+  See the Lightning BOLTS specifications \citep{LightningNetworkBasisLightningTechnology2024} for a general idea of the architecture, which will need to be adapted to Hydrozoa's multi-peer channel pathing and eUTXO ledger.}
+
+Hydrozoa heads are multi-party channels.
+This means that if Alice, Charlie, and Oscar each have 100~ADA in a head, then Alice can receive up to 200~ADA from the other two.
+Conversely, Alice can send her 100~ADA through Charlie and Oscar in any proportion---for example, 70~ADA via Charlie and 30~ADA via Oscar.
+
+By contrast, three Lightning channels would be required to provide similar inbound and outbound capacities for these three peers, and each peer would need to deposit twice the ADA into these channels.
+For a four-party Hydrozoa head, this goes up to six Lightning channels and tripled deposits.
+
+In this way, inbound and outbound capacities are pooled in a Hydrozoa head.
+We hypothesize that Hydrozoa heads should improve the cost and reliability of transfers, which correlate with the inbound/outbound capacities and connectivity of peers in the network.
+
+\subsection{Scaling benefits}%
+\label{h:hydrozoa-scaling-benefits}
+  
+\citet{CorcoranLewisPathPlanningPayment2024} demonstrated theoretical and experimental scaling benefits of multi-party channels in path planning.
+Focusing on fee minimization, they achieved up to an order of magnitude reduction in fees in simulations where up to 50\% of channels had more than two peers.
+
+However, focusing entirely on fee minimization is undesirable because it may saturate the capacity of cheap channels, resulting in many paths that are unlikely to succeed.
+Similarly, a singular focus on success probability leaves room for some peers to game the algorithm to extract exorbitant fees.
+\citet{PickhardtRichterOptimallyReliableCheap2021} recommend balancing between these goals with a Lagrange multiplier to set their relative weights.
+
+\subsection{Overhead and network stability}%
+\label{h:hydrozoa-overhead-stability}
+
+As more peers join a Hydrozoa head, the scaling benefits are marginally diminishing, while the peer-to-peer communication overhead increases quadratically.
+Moreover, it only takes one non-responding peer to stall consensus, inconveniencing all the other peers.
+
+Each network peer will prefer a certain head size, based on their own resources and the perceived reliability of the other peers.
+This may discourage centralization around overly large heads while encouraging better connectivity in smaller heads throughout the network.
+
+Despite the increased risk of consensus failure with more peers per channel, the Hydrozoa network may have a more stable topology than the Lightning network.
+Whenever a peer exhausts their funds in a head, the other peers can continue transacting without disruption as long as the peer continues to respond.
+Hydrozoa also allows the peer to deposit more funds into the head or request to leave the head, without disrupting the others.
+Thus, we expect some backbone of the Hydrozoa network to be relatively persistent.
+
+% ======================================================================
+\section{Expedited Midgard withdrawals}%
+\label{h:midgard-withdrawals}
+
+Midgard users can withdraw funds while avoiding Midgard's several-day settlement delay by using HTLC atomic swaps.
+
+For example, suppose Marie wants to withdraw ADA from Midgard to Cardano.
+If Lucas is willing to exchange his ADA on Cardano for Marie's ADA on Midgard, they can execute the swap.
+
+Lucas will consider Marie's L2 HTLC utxo to be confirmed as soon as he sees it included in a block header committed to Midgard's state queue.
+As long as the block header and its predecessors in the state queue are valid, and the block commitment transaction is confirmed on L1, Marie's HTLC utxo will not be rolled back.
+
+Marie will consider Lucas' L1 HTLC utxo to be confirmed as soon as she sees his HTLC funding transaction confirmed on Cardano L1.
+When she does, she redeems ADA on Cardano from Lucas' L1 HTLC, which allows Lucas to redeem ADA on Midgard from her L2 HTLC.
+
+HTLC-based withdrawal to Cardano is a good baseline option for Midgard users, but it has two disadvantages:
+\begin{itemize}
+  \item While many L2 HTLCs can be confirmed in a single block commitment transaction, L1 HTLCs can only be confirmed in individual L1 transactions.
+    When there is high traffic on Cardano, Marie could be waiting for a while to see Lucas' L1 HTLC confirmed.
+  \item The transactions to fund and redeem the L1 HTLC both cost L1 fees.
+\end{itemize}
+
+Overall, Marie is pleased because she avoids the settlement delay, and Lucas would be satisfied if he had already planned to deposit funds into Midgard.
+However, if Lucas participates in these HTLC swaps as a professional liquidity provider, he would prefer a more effective alternative.
+
+% ======================================================================
+\subsection{Midgard and a Hydrozoa head}%
+\label{h:midgard-and-hydrozoa-head}
+
+Suppose instead that Marie and Lucas execute their HTLC atomic swap between Midgard and a Hydrozoa head.
+In this scenario, both Marie and Lucas must be peers of this Hydrozoa head.
+
+As before, Lucas waits for Marie's Midgard HTLC to be confirmed in a block header committed to Midgard's state queue.
+However, Marie will consider Lucas' Hydrozoa HTLC to be confirmed as soon as it is included in a multi-signed snapshot of the Hydrozoa head.
+Since Hydrozoa snapshots are frequently generated and multi-signed, Lucas' side of the HTLC setup is substantially sped up by being hosted on Hydrozoa.
+
+Furthermore, Lucas and Marie do not incur L1 fees to fund and redeem the HTLC on Hydrozoa.
+After redeeming her ADA on Hydrozoa, Marie can freely transact with any other peers of the Hydrozoa head or withdraw the ADA to Cardano.
+Withdrawals from Hydrozoa to Cardano are quickly confirmed in L2 snapshots, and multiple withdrawals can be executed at once in a single settlement transaction on L1 without script execution fees.
+
+% ======================================================================
+\subsection{Midgard and Hydrozoa network}%
+\label{h:midgard-and-hydrozoa-network}
+
+The Hydrozoa network allows Marie and Lucas to execute their swap even if they're not in the same Hydrozoa head.
+For example, this scenario could involve four HTLCs (all using Marie's secret hash):
+\begin{itemize}
+  \item HTLC from Marie to Lucas on Midgard
+  \item HTLC from Lucas to Nancy on head 1
+  \item HTLC from Nancy to Oscar on head 2
+  \item HTLC from Oscar to Marie on head 3
+\end{itemize}
+
+As before, Lucas waits for Marie's Midgard HTLC to be committed in a block header on L1.
+Nancy, Oscar, and Marie will each consider their respective monitored HTLC to be confirmed when it is included in the corresponding Hydrozoa head's multi-signed snapshot.
+
+The extra hops through the Hydrozoa network will likely add little latency relative to the previous scenario, even if Lucas needs several attempts before successfully charting a transfer route through the network.
+Typically, Marie can expect to receive the funds within a minute, sometimes within milliseconds.
+
+After receiving the funds in her Hydrozoa head, Marie can freely transact with anyone else in the Hydrozoa network or quickly withdraw them to Cardano L1.
+Lucas, Nancy, and Oscar avoid L1 fees while facilitating Marie's withdrawal and are less affected by traffic congestion on L1.
+
+% ======================================================================
+\section{Bitcoin interoperability}%
+\label{h:bitcoin-interoperability}
+
+Interoperability between the Lightning and Hydrozoa networks would use HTLC atomic swaps, facilitated by liquidity providers that run nodes in both networks.
+
+Suppose that Ursula holds ADA in the Hydrozoa network and wants to send 100K SATS to Walter.%
+\footnote{One Bitcoin (BTC) is equal to 100 million satoshis (SATS).}
+Suppose further that Victor holds ADA in the Hydrozoa network and BTC in the Lightning network, and he is willing to exchange them at a rate of 1050 SATS/ADA plus a percentage fee.
+If these terms are acceptable to Ursula, then she can execute an HTLC transfer/swap path that routes her ADA to Victor, transforms via Victor into BTC on the Lightning network, and then routes the BTC to Walter.
+
+More generally, if many peers at the Lightning/Hydrozoa boundary offer a range of exchange rates, Ursula's transfer pathing algorithm will optimize to achieve the best success probability, transfer fee, and exchange rate.
+
+We expect these exchange rates to be fairly similar across peers and to track closely to the global BTC/ADA price because peers can update their prices quickly, and arbitrage bots can trade against mismatched prices.
+
+Beyond this simple atomic swap mechanism, there are many promising design possibilities to explore for HTLC-based interoperability between Cardano and Bitcoin.
+For instance, if BTC can be appropriately wrapped on the Cardano/Hydrozoa ledger, then any improvement in fees and success probability on Hydrozoa can be used to provide better paths between Lightning nodes.
+
+% ======================================================================
+\section{Conclusion}%
+\label{h:conclusion}
+
+Layer 2 solutions are poised to revolutionize Cardano, unlocking myriad applications with high throughput and low latency.
+However, if we want users to interact with these applications, we must address user experience fragmentation, which can only be done if L2s are interoperable with each other and Cardano.
+
+In this paper, we illustrate how an eUTXO-enhanced hashed timelock contract (HTLC) can interoperate between Cardano, Midgard, Hydrozoa, and Bitcoin Lightning.
+The main advantage of the HTLC mechanism is its simplicity---we have mainly focused on its UTXO version in this paper, but it has been implemented in account-based ledgers and even non-blockchain systems \citep{InterledgerFoundationHashedTimelockAgreements2024}.
+We believe that it can become the universal interoperability mechanism for Cardano, its L2s, and other L1s.
+
+\end{multicols}
+
+\bibliographystyle{ACM-Reference-Format}
+
+\raggedright
+\bibliography{main}
+% \bibliography{Zotero}
+
+\end{document}

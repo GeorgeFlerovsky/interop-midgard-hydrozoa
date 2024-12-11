@@ -1,0 +1,180 @@
+@misc{AnastasiaLabsMidgardCardanoLayer2024,
+  title = {Midgard: {{Cardano Layer}} 2},
+  shorttitle = {Anastasia {{Labs}} - {{Midgard}}},
+  author = {{Anastasia Labs}},
+  year = {2024},
+  journal = {Project Catalyst},
+  url = {https://projectcatalyst.io/funds/12/f12-cardano-use-cases-product/anastasia-labs-midgard-cardano-layer-2},
+  urldate = {2024-12-02},
+  langid = {english}
+}
+
+@article{CorcoranLewisPathPlanningPayment2024,
+  title = {Path {{Planning}} in {{Payment Channel Networks}} with {{Multi-Party Channels}}},
+  author = {Corcoran, Padraig and Lewis, Rhyd},
+  year = {2024},
+  month = oct,
+  journal = {Distrib. Ledger Technol.},
+  url = {https://dl.acm.org/doi/10.1145/3702248},
+  urldate = {2024-12-07},
+  abstract = {Payment Channel Networks (PCNs) provide a means to improve the scaling of cryptocurrency payments by allowing peers to make payments between themselves in an efficient manner. To make a payment between two peers, the task of path planning must first be performed to determine a path in the PCN connecting the peers in question before the payment in question is performed using this path. To date, existing research has focused on the problem of performing path planning in PCNs that contain two-party channels. It has been hypothesised that the scaling of PCNs could be further improved by considering the inclusion of multi-party channels that contain more than two peers. However, the problem of performing path planning in PCNs that contain multi-party channels has not yet been considered.In this article, we address this gap in the research literature and propose a novel path planning method for PCNs containing multi-party channels. This method involves modelling the PCN with multi-party channels as a hypergraph, a type of graph where edges can contain two or more vertices, and using this model to solve the path planning problem in question. We prove that the proposed method is correct and computationally efficient. Furthermore, assuming path planning is performed using this method, we also present theoretical and experimental analyses that demonstrate the scaling benefits of using multi-party channels.},
+  annotation = {Just Accepted}
+}
+
+@misc{DiSarroCIP112ObserveScript2024,
+  type = {Cardano {{Improvement Proposal}}},
+  title = {{{CIP-112}}: {{Observe Script Type}}},
+  author = {DiSarro, Philip},
+  year = {2024},
+  month = jan,
+  number = {CIP-112},
+  publisher = {Cardano Foundation},
+  url = {https://github.com/cardano-foundation/CIPs/tree/master/CIP-0112},
+  urldate = {2024-12-02},
+  abstract = {We propose to introduce a new Plutus scripts type Observe in addition to those currently available (spending, certifying, rewarding, minting, drep). The purpose of this script type is to allow arbitrary validation logic to be decoupled from any ledger action. Since observe validators are decoupled from actions, you can run them in a transaction without needing to perform any associated action (ie you don't need to consume a script input, or mint a token, or withdraw from a staking script just to execute this validator). Additionally, we propose to introduce a new assertion to native scripts that they can use to check that a particular script hash is in required\_observers (which in turn enforces that the script must be executed successfully in the transaction). This addresses a number of technical issues discussed in other CIPs and CPS such as the redundant execution of spending scripts, and the inability to effectively use native scripts in conjunction with Plutus scripts.},
+  langid = {english}
+}
+
+@misc{FlerovskyHydrozoaProtocolLightweight2024,
+  title = {Hydrozoa Protocol for Lightweight and Flexible {{Hydra Heads}} for {{Cardano}}},
+  shorttitle = {Cardano {{Layer}} 2},
+  author = {Flerovsky, George},
+  year = {2024},
+  journal = {Project Catalyst},
+  url = {https://projectcatalyst.io/funds/12/f12-cardano-use-cases-mvp/cardano-layer-2-hydrozoa-protocol-for-lightweight-and-flexible-hydra-heads-for-cardano},
+  urldate = {2024-12-02},
+  langid = {english}
+}
+
+@misc{InterledgerFoundationHashedTimelockAgreements2024,
+  title = {Hashed-{{Timelock Agreements}}},
+  author = {{Interledger Foundation}},
+  year = {2024},
+  journal = {Interledger},
+  url = {https://interledger.org/developers/rfcs/hashed-timelock-agreements/},
+  urldate = {2024-11-28},
+  abstract = {Enable seamless exchange of value across payment networks.},
+  langid = {english}
+}
+
+@incollection{JourenkoEtAlInterheadHydraTwo2023,
+  title = {Interhead {{Hydra}}: {{Two Heads}} Are {{Better}} than {{One}}},
+  shorttitle = {Interhead {{Hydra}}},
+  booktitle = {Mathematical {{Research}} for {{Blockchain Economy}}},
+  author = {Jourenko, Maxim and Larangeira, Mario and Tanaka, Keisuke},
+  editor = {Pardalos, Panos and Kotsireas, Ilias and Guo, Yike and Knottenbelt, William},
+  year = {2023},
+  pages = {187--212},
+  publisher = {Springer International Publishing},
+  address = {Cham},
+  url = {https://link.springer.com/10.1007/978-3-031-18679-0\_11},
+  urldate = {2024-12-02},
+  abstract = {Distributed ledger are maintained through consensus protocols executed by mutually distrustful parties. However, these consensus protocols have inherent limitations thus resulting in scalability issues of the ledger. Layer-2 protocols operate on channels and allow parties to interact with another without going through the consensus protocol albeit relying on its security as fall-back. Prominent Layer-2 protocols are payment channels for Bitcoin that allow two parties to exchange coins, State Channels for Ethereum that allow two parties to execute a state machine, and Hydra heads [FC'21] for Cardano which allows multiple parties execution of Constraint Emitting Machines (CEM). Channels can be concatenated into networks using techniques such as Hashed Timelocked Contracts to execute payments or virtual state channels as introduced by Dziembowski et al. [CCS'18] to execute state machines. These constructions allow interaction between two parties across a channel network, i.e. the two endpoints of a path of channels. This is realized by utilizing intermediaries, which are the parties on the channel path which are in-between both endpoints, who have to pay collateral to ensure security of the constructions. While these approaches can be used with Hydra, they cannot be trivially extended to allow execution of CEMs between an arbitrary amount of parties across different Hydra heads. This work addresses this gap by introducing the Interhead construction that allows for the iterative creation of virtual Hydra heads. Of independent interest, our construction is the first that (1) supports channels with an arbitrary amount of parties and (2) allows for collateral to be paid by multiple intermediaries which allows to share this burden and thus improves practicality.},
+  isbn = {978-3-031-18678-3 978-3-031-18679-0},
+  langid = {english}
+}
+
+@inproceedings{LangeEtAlImpactAttachmentStrategies2021a,
+  title = {On the {{Impact}} of {{Attachment Strategies}} for {{Payment Channel Networks}}},
+  booktitle = {2021 {{IEEE International Conference}} on {{Blockchain}} and {{Cryptocurrency}} ({{ICBC}})},
+  author = {Lange, Kimberly and Rohrer, Elias and Tschorsch, Florian},
+  year = {2021},
+  month = may,
+  pages = {1--9},
+  url = {https://ieeexplore.ieee.org/document/9461104},
+  urldate = {2024-12-03},
+  abstract = {Payment channel networks, such as Bitcoin's Lightning Network, promise to improve the scalability of blockchain systems by processing the majority of transactions off-chain. Due to the design, the positioning of nodes in the network topology is a highly influential factor regarding the experienced performance, costs, and fee revenue of network participants. As a consequence, today's Lightning Network is built around a small number of highly-connected hubs. Recent literature shows the centralizing tendencies to be incentive-compatible and at the same time detrimental to security and privacy. The choice of attachment strategies therefore becomes a crucial factor for the future of such systems. In this paper, we provide an empirical study on the (local and global) impact of various attachment strategies for payment channel networks. To this end, we introduce candidate strategies from the field of graph theory and analyze them with respect to their computational complexity as well as their repercussions for end users and service providers. Moreover, we evaluate their long-term impact on the network topology.},
+  keywords = {Attachment Strategies,Autopilot,Blockchain,Conferences,Graph theory,Join Strategies,Lightning,Lightning Network,Network topology,Payment Channel Networks,Privacy,Scalability}
+}
+
+@misc{LightningLabsHashedTimelockContract2023,
+  title = {Hashed {{Timelock Contract}} ({{HTLC}})},
+  author = {{Lightning Labs}},
+  year = {2023},
+  month = may,
+  journal = {Bitcoin Lightning Builder's Guide},
+  url = {https://docs.lightning.engineering/the-lightning-network/multihop-payments/hash-time-lock-contract-htlc},
+  urldate = {2024-12-02},
+  abstract = {HTLCs are the centerpiece of every Lightning Network payment. Learn how they are formed to create secure multi-hop transactions.},
+  langid = {english}
+}
+
+@misc{LightningNetworkBasisLightningTechnology2024,
+  title = {Basis of {{Lightning Technology}} ({{BOLT}}) {{Specifications}}},
+  author = {{Lightning Network}},
+  year = {2024},
+  url = {https://github.com/lightning/bolts},
+  urldate = {2024-12-03},
+  abstract = {BOLT: Basis of Lightning Technology (Lightning Network Specifications)},
+  keywords = {bitcoin,blockchain,cryptocurrency,cryptography,lightning,lightning-network,protocol}
+}
+
+@misc{MLabsLtdIkigaiTechHydraAuctionBlockchain2024,
+  title = {Hydra Auction Blockchain Protocol},
+  author = {{MLabs Ltd} and {Ikigai Tech}},
+  year = {2024},
+  url = {https://github.com/mlabs-haskell/hydra-auction-onchain/blob/staging/docs/spec.md},
+  urldate = {2024-12-02}
+}
+
+@unpublished{NagelEtAlHydraHeadV1Specification2024,
+  type = {Technical {{Specification}}},
+  title = {Hydra {{HeadV1 Specification}}: {{Coordinated Head}} Protocol},
+  author = {Nagel, Sebastian and Bogicevic, Sasha and Testagrossa, Franco and Firth, Daniel},
+  year = {2024},
+  url = {https://hydra.family/head-protocol/docs/dev/specification},
+  urldate = {2024-12-02},
+  langid = {english}
+}
+
+@misc{PickhardtRichterOptimallyReliableCheap2021,
+  title = {Optimally {{Reliable}} \& {{Cheap Payment Flows}} on the {{Lightning Network}}},
+  author = {Pickhardt, Rene and Richter, Stefan},
+  year = {2021},
+  month = jul,
+  number = {arXiv:2107.05322},
+  eprint = {2107.05322},
+  publisher = {arXiv},
+  url = {http://arxiv.org/abs/2107.05322},
+  urldate = {2024-12-03},
+  abstract = {Today, payment paths in Bitcoin's Lightning Network are found by searching for shortest paths on the fee graph. We enhance this approach in two dimensions. Firstly, we take into account the probability of a payment actually being possible due to the unknown balance distributions in the channels. Secondly, we use minimum cost flows as a proper generalization of shortest paths to multi-part payments (MPP). In particular we show that under plausible assumptions about the balance distributions we can find the most likely MPP for any given set of senders, recipients and amounts by solving for a (generalized) integer minimum cost flow with a separable and convex cost function. Polynomial time exact algorithms as well as approximations are known for this optimization problem. We present a round-based algorithm of min-cost flow computations for delivering large payment amounts over the Lightning Network. This algorithm works by updating the probability distributions with the information gained from both successful and unsuccessful paths on prior rounds. In all our experiments a single digit number of rounds sufficed to deliver payments of sizes that were close to the total local balance of the sender. Early experiments indicate that our approach increases the size of payments that can be reliably delivered by several orders of magnitude compared to the current state of the art. We observe that finding the cheapest multi-part payments is an NP-hard problem considering the current fee structure and propose dropping the base fee to make it a linear min-cost flow problem. Finally, we discuss possibilities for maximizing the probability while at the same time minimizing the fees of a flow. While this turns out to be a hard problem in general as well - even in the single path case - it appears to be surprisingly tractable in practice.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Networking and Internet Architecture}
+}
+
+@article{PoonDryjaBitcoinLightningNetwork2016,
+  title = {The {{Bitcoin Lightning Network}}: {{Scalable Off-Chain Instant Payments}}},
+  author = {Poon, Joseph and Dryja, Thaddeus},
+  year = {2016},
+  month = jan,
+  url = {https://lightning.network/lightning-network-paper.pdf},
+  abstract = {The bitcoin protocol can encompass the global financial transaction volume in all electronic payment systems today, without a single custodial third party holding funds or requiring participants to have anything more than a computer using a broadband connection. A decentralized system is proposed whereby transactions are sent over a network of micropayment channels (a.k.a. payment channels or transaction channels) whose transfer of value occurs off-blockchain. If Bitcoin transactions can be signed with a new sighash type that addresses malleability, these transfers may occur between untrusted parties along the transfer route by contracts which, in the event of uncooperative or hostile participants, are enforceable via broadcast over the bitcoin blockchain in the event of uncooperative or hostile participants, through a series of decrementing timelocks.},
+  langid = {english}
+}
+
+@misc{SundaeLabsComprehensiveSpecificationDevelopment2024,
+  title = {Comprehensive {{Specification Development}} for {{Gummiworm Protocol}} on {{Cardano}}},
+  author = {{Sundae Labs}},
+  year = {2024},
+  journal = {Project Catalyst},
+  url = {https://projectcatalyst.io/funds/11/cardano-use-cases-concept/sundae-labs-comprehensive-specification-development-for-gummiworm-protocol-on-cardano},
+  urldate = {2024-12-02},
+  langid = {english}
+}
+
+@misc{WaughHolzEmpiricalStudyAvailability2020,
+  title = {An Empirical Study of Availability and Reliability Properties of the {{Bitcoin Lightning Network}}},
+  author = {Waugh, Finnegan and Holz, Ralph},
+  year = {2020},
+  month = jun,
+  number = {arXiv:2006.14358},
+  eprint = {2006.14358},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  url = {http://arxiv.org/abs/2006.14358},
+  urldate = {2024-12-03},
+  abstract = {The Bitcoin Lightning network is a mechanism to enable fast and inexpensive off-chain Bitcoin transactions using peer-to-peer (P2P) channels between nodes that can also be composed into a routing path. Although the resulting possible channel graphs are well-studied, there is no empirical data on the network's reliability in terms of being able to successfully route payments at a given moment in time. In this paper we address this gap and investigate two forms of availability that are a necessary ingredient to achieve such reliability. We first study the Lightning network's ability to route payments of various sizes to nearly every participating node, over most available channels. We establish an inverse relationship between payment volume and success rate and show that at best only about a third of destination nodes can be successfully reached. The routing is hampered by a number of possible errors, both transient and permanent. We then study the availability of nodes in the network longitudinally and determine how long-lived they are. Churn in the network is actually low, and a considerable number of nodes are hosted on cloud providers. By testing node liveness, we find that the propagated network information is relatively often stale, however, both for IP addresses and Tor onion addresses. We provide recommendations how the Lightning network can be improved, including considerations which trade-offs between privacy and decentralization on the one hand and reliability on the other hand should at least be reconsidered by the community developing the Lightning network.},
+  archiveprefix = {arXiv},
+  langid = {english},
+  keywords = {Computer Science - Networking and Internet Architecture}
+}
