@@ -1,0 +1,21 @@
+# Aiken compilation artifacts
+artifacts/
+# Aiken's project working directory
+build/
+# Aiken's default documentation export
+docs/
+
+# Latex aux files
+**/*.aux
+**/*.bbl
+**/*.blg
+**/*.fdb_latexmk
+**/*.fls
+**/*.lof
+**/*.log
+**/*.out
+**/*.pdf
+**/*.synctex.gz
+**/*.toc
+
+.direnv
