@@ -6,20 +6,20 @@ help:
 	@echo "Targets:"
 	@echo "  help      -- show this help"
 	@echo "  shell     -- open nix dev shell"
-	@echo "  build     -- generate the whitepaper pdf"
-	@echo "  nix-build -- open nix shell & build"
+	@echo "  spec     -- generate the whitepaper pdf"
+	@echo "  nix-spec -- open nix shell & spec"
 	@echo "  clean     -- clean up latexmk files"
 
 .PHONY: shell
 shell:
 	nix develop
 
-.PHONY: build
-build:
+.PHONY: spec
+spec:
 	latexmk -pdf -verbose -file-line-error -synctex=1 -interaction=nonstopmode
 
-.PHONY: nix-build
-nix-build:
+.PHONY: nix-spec
+nix-spec:
 	nix develop --command bash -c "latexmk -pdf -verbose -file-line-error -synctex=1 -interaction=nonstopmode"
 
 .PHONY: clean
