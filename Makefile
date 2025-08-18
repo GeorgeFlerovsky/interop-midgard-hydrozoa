@@ -25,4 +25,4 @@ nix-build:
 .PHONY: clean
 clean:
 	latexmk -C
-	rm -f main.bbl
+	rm -f interop-midgard-hydrozoa.bbl
