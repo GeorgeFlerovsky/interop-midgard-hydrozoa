@@ -22,6 +22,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Provide git info to latex
+      run: ./scripts/latexmk-gitinfo2
+
     - name: Compile LaTeX to PDF
       uses: xu-cheng/latex-action@v3
       with:
